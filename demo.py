@@ -16,6 +16,7 @@ modelName = 'dextr_pascal-sbd'
 pad = 50
 thres = 0.8
 gpu_id = 0
+use_cuda = torch.cuda.is_available()
 
 #  Create the network and load the weights
 net = resnet.resnet101(1, nInputChannels=4, classifier='psp')
@@ -32,7 +33,7 @@ else:
     new_state_dict = state_dict_checkpoint
 net.load_state_dict(new_state_dict)
 net.eval()
-if gpu_id >= 0:
+if use_cuda and gpu_id >= 0:
     torch.cuda.set_device(device=gpu_id)
     net.cuda()
 
@@ -66,12 +67,12 @@ while 1:
 
     # Run a forward pass
     inputs = Variable(input_dextr, volatile=True)
-    if gpu_id >= 0:
+    if use_cuda and gpu_id >= 0:
         inputs = inputs.cuda()
 
     outputs = net.forward(inputs)
     outputs = upsample(outputs, size=(512, 512), mode='bilinear')
-    if gpu_id >= 0:
+    if use_cuda and gpu_id >= 0:
         outputs = outputs.cpu()
 
     pred = np.transpose(outputs.data.numpy()[0, ...], (1, 2, 0))
